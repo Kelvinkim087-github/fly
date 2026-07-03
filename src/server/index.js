@@ -367,9 +367,9 @@ app.use(
       if (!origin) return callback(null, true);
 
       const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8080",
+        "https://server-dnkw.onrender.com:3000",
+        "https://server-dnkw.onrender.com:5173",
+        "https://server-dnkw.onrender.com:8080",
       ];
 
       if (allowedOrigins.indexOf(origin) === -1) {
@@ -2032,7 +2032,7 @@ const setupShutdownHandlers = () => {
 const server = app.listen(PORT, () => {
   console.log(`
  Server running on port ${PORT}
- Local: http://localhost:${PORT}
+ Local: https://server-dnkw.onrender.com:${PORT}
 
  AUTHENTICATION
    App Instance ID: ${authTokenManager.getAppInstanceInfo().id}

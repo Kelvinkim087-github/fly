@@ -73,7 +73,7 @@ const PaymentFormFixed = () => {
       attempts++;
       try {
         const res = await fetch(
-          `http://localhost:3500/stk/status/${checkoutRequestId}`,
+          `https://server-dnkw.onrender.com/stk/status/${checkoutRequestId}`,
         );
         console.log("Polling status response code:", res.status);
 
@@ -156,7 +156,7 @@ const PaymentFormFixed = () => {
     try {
       const requestData = { phone: phone.trim(), amount: parseFloat(amount) };
 
-      const response = await fetch("http://localhost:3500/stk", {
+      const response = await fetch("https://server-dnkw.onrender.com/stk", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

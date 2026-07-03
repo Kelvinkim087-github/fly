@@ -52,7 +52,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3500/register",
+        "https://server-dnkw.onrender.com/register",
         {
           user: formData.user,
           pwd: formData.pwd,

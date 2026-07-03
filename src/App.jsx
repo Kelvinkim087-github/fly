@@ -69,7 +69,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        await fetch("http://localhost:3500/logout", {
+        await fetch("https://server-dnkw.onrender.com/logout", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

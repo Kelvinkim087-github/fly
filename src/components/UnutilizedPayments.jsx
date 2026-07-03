@@ -36,7 +36,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `http://localhost:3500/admin/payments?${params}`,
+        `https://server-dnkw.onrender.com/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +152,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `http://localhost:3500/admin/payments?${params}`,
+        `https://server-dnkw.onrender.com/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -19,11 +19,14 @@ const AdminUsers = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await axios.get("http://localhost:3500/admin/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.get(
+        "https://server-dnkw.onrender.com/admin/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       // Backend returns: { success: true, data: users }
       // axios response.data contains the JSON response
@@ -75,7 +78,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:3500/admin/promote",
+        "https://server-dnkw.onrender.com/admin/promote",
         { targetUser: username },
         {
           headers: {

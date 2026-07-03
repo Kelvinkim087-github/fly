@@ -38,7 +38,7 @@ const ConfirmSTKPayment = () => {
 
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:3500/api/sap/business-partners`,
+        `https://server-dnkw.onrender.com/api/sap/business-partners`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ const ConfirmSTKPayment = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        `http://localhost:3500/api/sap/invoices`,
+        `https://server-dnkw.onrender.com/api/sap/invoices`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,7 +147,7 @@ const ConfirmSTKPayment = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:3500/api/sap/invoices/${docEntry}`,
+        `https://server-dnkw.onrender.com/api/sap/invoices/${docEntry}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -211,7 +211,7 @@ const ConfirmSTKPayment = () => {
       // Otherwise fetch from API
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:3500/admin/payments/${id}`,
+        `https://server-dnkw.onrender.com/admin/payments/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -294,7 +294,7 @@ const ConfirmSTKPayment = () => {
       console.log("📤 Sending confirmation to backend:", sapPaymentData);
 
       const sapResponse = await axios.post(
-        `http://localhost:3500/api/sap/incoming-payments`,
+        `https://server-dnkw.onrender.com/api/sap/incoming-payments`,
         sapPaymentData,
         {
           headers: {
