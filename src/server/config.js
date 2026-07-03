@@ -49,7 +49,7 @@ const config = {
   // CORS
   corsOrigin:
     process.env.NODE_ENV === "development"
-      ? "https://server-dnkw.onrender.com:5173"
+      ? "https://server-curious-song-2077.fly.dev:5173"
       : "app://.",
 };
 

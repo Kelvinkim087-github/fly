@@ -73,7 +73,7 @@ const PaymentFormFixed = () => {
       attempts++;
       try {
         const res = await fetch(
-          `https://server-dnkw.onrender.com/stk/status/${checkoutRequestId}`,
+          `https://server-curious-song-2077.fly.dev/stk/status/${checkoutRequestId}`,
         );
         console.log("Polling status response code:", res.status);
 
@@ -156,15 +156,18 @@ const PaymentFormFixed = () => {
     try {
       const requestData = { phone: phone.trim(), amount: parseFloat(amount) };
 
-      const response = await fetch("https://server-dnkw.onrender.com/stk", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        "https://server-curious-song-2077.fly.dev/stk",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestData),
+          mode: "cors",
         },
-        body: JSON.stringify(requestData),
-        mode: "cors",
-      });
+      );
 
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`;

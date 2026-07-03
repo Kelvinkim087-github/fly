@@ -38,7 +38,7 @@ const ConfirmSTKPayment = () => {
 
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/api/sap/business-partners`,
+        `https://server-curious-song-2077.fly.dev/api/sap/business-partners`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ const ConfirmSTKPayment = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/api/sap/invoices`,
+        `https://server-curious-song-2077.fly.dev/api/sap/invoices`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -147,7 +147,7 @@ const ConfirmSTKPayment = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/api/sap/invoices/${docEntry}`,
+        `https://server-curious-song-2077.fly.dev/api/sap/invoices/${docEntry}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -211,7 +211,7 @@ const ConfirmSTKPayment = () => {
       // Otherwise fetch from API
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/admin/payments/${id}`,
+        `https://server-curious-song-2077.fly.dev/admin/payments/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -294,7 +294,7 @@ const ConfirmSTKPayment = () => {
       console.log("📤 Sending confirmation to backend:", sapPaymentData);
 
       const sapResponse = await axios.post(
-        `https://server-dnkw.onrender.com/api/sap/incoming-payments`,
+        `https://server-curious-song-2077.fly.dev/api/sap/incoming-payments`,
         sapPaymentData,
         {
           headers: {

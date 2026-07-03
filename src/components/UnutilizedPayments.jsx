@@ -36,7 +36,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/admin/payments?${params}`,
+        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +152,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/admin/payments?${params}`,
+        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

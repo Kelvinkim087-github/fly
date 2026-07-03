@@ -46,14 +46,17 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
     setInfoMessage("");
 
     try {
-      const response = await fetch("https://server-dnkw.onrender.com/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "https://server-curious-song-2077.fly.dev/auth",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user: username, pwd: password }),
+          timeout: 10000, // 10 second timeout
         },
-        body: JSON.stringify({ user: username, pwd: password }),
-        timeout: 10000, // 10 second timeout
-      });
+      );
 
       const data = await response.json();
 

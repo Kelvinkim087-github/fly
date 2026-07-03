@@ -36,7 +36,7 @@ const UtilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/admin/payments?${params}`,
+        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -122,7 +122,7 @@ const UtilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-dnkw.onrender.com/admin/payments?${params}`,
+        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -20,7 +20,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        "https://server-dnkw.onrender.com/admin/users",
+        "https://server-curious-song-2077.fly.dev/admin/users",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "https://server-dnkw.onrender.com/admin/promote",
+        "https://server-curious-song-2077.fly.dev/admin/promote",
         { targetUser: username },
         {
           headers: {
