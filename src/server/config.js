@@ -49,7 +49,7 @@ const config = {
   // CORS
   corsOrigin:
     process.env.NODE_ENV === "development"
-      ? "https://server-curious-song-2077.fly.dev:5173"
+      ? "http://localhost:3500:5173"
       : "app://.",
 };
 

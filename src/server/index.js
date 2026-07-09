@@ -216,7 +216,7 @@ class SAPSessionManager {
 
       this.sessionToken = response.data.SessionId;
       this.sessionCookie = `B1SESSION=${this.sessionToken}`;
-      this.sessionExpiry = Date.now() + 30 * 60 * 1000; // 30 minutes
+      this.sessionExpiry = Date.now() + 2 * 60 * 60 * 1000; // 2 hours
       this.isSessionActive = true;
 
       console.log("SAP Login successful");
@@ -364,12 +364,16 @@ const authTokenManager = new AuthTokenManager();
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Safaricom Daraja webhooks and server-to-server requests have no origin header
       if (!origin) return callback(null, true);
 
       const allowedOrigins = [
-        "https://server-curious-song-2077.fly.dev:3000",
-        "https://server-curious-song-2077.fly.dev:5173",
-        "https://server-curious-song-2077.fly.dev:8080",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:8080",
+        "https://stk-mpesa-3.onrender.com",
+        "https://fly-6ub7.onrender.com",
       ];
 
       if (allowedOrigins.indexOf(origin) === -1) {
@@ -381,7 +385,13 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
+    optionsSuccessStatus: 200, // <-- CRITICAL FOR VERCEL: Automatically responds 200 OK to OPTIONS requests
   }),
 );
 
@@ -400,17 +410,48 @@ app.use((req, res, next) => {
   next();
 });
 
-// Connect to MongoDB
-mongoose
-  .connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+// Ensure this function sits OUTSIDE your routes at the top level of the file
+const connectToMongo = async () => {
+  console.log("LOG STEP 1: connectToMongo wrapper function invoked.");
+
+  if (mongoose.connection.readyState === 1) {
+    console.log("LOG STEP 2: Database already connected. Reusing connection.");
+    return;
+  }
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error("CRITICAL ERROR: process.env.MONGODB_URI is undefined!");
+    throw new Error(
+      "Database URI string is missing from Environment Variables",
+    );
+  }
+
+  console.log("LOG STEP 3: Attempting raw mongoose.connect()...");
+
+  await mongoose.connect(uri, {
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+    family: 4,
+  });
+
+  console.log("LOG STEP 4: Mongoose connected successfully!");
+};
+
+// 2. NEW Database Connection Middleware (Runs second, blocks until Mongo is ready)
+app.use(async (req, res, next) => {
+  try {
+    // Explicitly halt execution here until the handshake completes
+    await connectToMongo();
+    next(); // Database is ready, move on to the actual routes below
+  } catch (err) {
+    console.error("Database connection middleware failure:", err);
+    res
+      .status(500)
+      .json({ success: false, error: "Database connection failed" });
+  }
+});
 
 // ====================
 // AUTH MIDDLEWARE
@@ -609,6 +650,7 @@ const handleSAPError = (error, req, res, endpoint) => {
 // Register - FIXED VERSION
 app.post("/register", async (req, res) => {
   try {
+    await connectToMongo();
     const { user, pwd } = req.body;
     if (!user || !pwd) {
       return res
@@ -649,7 +691,9 @@ app.post("/register", async (req, res) => {
 
 // Login - FIXED VERSION with better error handling
 app.post("/auth", async (req, res) => {
+  console.log("--- NEW INCOMING REQUEST TO /AUTH ---");
   try {
+    await connectToMongo();
     const { user, pwd } = req.body;
 
     // Input validation
@@ -1495,36 +1539,61 @@ app.get("/token", async (req, res) => {
 });
 
 const generateToken = async (req, res, next) => {
-  const secret = process.env.MPESA_CONSUMER_SECRET;
-  const consumer = process.env.MPESA_CONSUMER_KEY;
+  try {
+    const secret = process.env.MPESA_CONSUMER_SECRET;
+    const consumer = process.env.MPESA_CONSUMER_KEY;
 
-  const auth = new Buffer.from(`${consumer}:${secret}`).toString("base64");
-  await axios
-    .get(
+    if (!secret || !consumer) {
+      console.error(
+        "[M-Pesa Auth] ERROR: Missing MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET in .env file!",
+      );
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error: Missing API credentials configuration.",
+      });
+    }
+
+    const auth = Buffer.from(`${consumer.trim()}:${secret.trim()}`).toString(
+      "base64",
+    );
+
+    console.log("[M-Pesa Auth] Requesting access token from Safaricom...");
+
+    const response = await axios.get(
       "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
       {
         headers: {
-          authorization: `Basic ${auth}`,
+          Authorization: `Basic ${auth}`, // Note: Capital 'A' in Authorization is preferred
         },
-        timeout: 10000,
+        timeout: 15000,
       },
-    )
-    .then((response) => {
-      req.token = response.data.access_token;
-      next();
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json({
-        success: false,
-        error: err.message,
-      });
+    );
+
+    req.token = response.data.access_token;
+    console.log("[M-Pesa Auth] Token generated successfully!");
+    next(); // Pass control safely to your STK route handler
+  } catch (err) {
+    console.error("=== DARAJA AUTHENTICATION CRITICAL ERROR ===");
+    if (err.response) {
+      console.error("Status:", err.response.status);
+      console.error("Data:", JSON.stringify(err.response.data, null, 2));
+    } else {
+      console.error("Error Message:", err.message);
+    }
+    console.error("============================================");
+
+    // Stop execution here and return the exact response to your frontend client
+    return res.status(400).json({
+      success: false,
+      error: err.response?.data?.errorMessage || err.message,
     });
+  }
 };
 
 // STK Push Endpoint
 app.post("/stk", generateToken, async (req, res) => {
   try {
+    await connectToMongo();
     const { phone, amount } = req.body;
 
     if (!phone || !amount) {
@@ -1561,27 +1630,26 @@ app.post("/stk", generateToken, async (req, res) => {
       ("0" + date.getMinutes()).slice(-2) +
       ("0" + date.getSeconds()).slice(-2);
 
-    const shortcode = 174379;
+    const shortcode = String(process.env.MPESA_SHORTCODE).trim();
     const passkey =
       "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
 
     const password = Buffer.from(shortcode + passkey + timestamp).toString(
       "base64",
     );
-
+    const callbackUrl = String(process.env.MPESA_CALLBACK_URL).trim();
     const response = await axios.post(
       "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
-        BusinessShortCode: shortcode,
+        BusinessShortCode: Number(shortcode), // Force Number
         Password: password,
         Timestamp: timestamp,
         TransactionType: "CustomerPayBillOnline",
-        Amount: amount,
-        PartyA: mpesaPhone,
-        PartyB: shortcode,
-        PhoneNumber: mpesaPhone,
-        CallBackURL:
-          "https://altha-unsimular-pseudoclerically.ngrok-free.dev/callback",
+        Amount: Math.floor(Number(amount)), // Force clean Integer (no strings or decimals)
+        PartyA: Number(mpesaPhone), // Force Number representation
+        PartyB: Number(shortcode), // Force Number matching shortcode
+        PhoneNumber: Number(mpesaPhone),
+        CallBackURL: callbackUrl,
         AccountReference: mpesaPhone,
         TransactionDesc: "Payment",
       },
@@ -1608,11 +1676,29 @@ app.post("/stk", generateToken, async (req, res) => {
       );
       // mark dbSaved for inclusion in response
       res.locals.dbSaved = true;
-    } catch (dbErr) {
-      console.error("Failed to create pending payment:", dbErr);
-      // mark dbSaved false so caller can see DB save failed during debugging
-      res.locals.dbSaved = false;
-      // We continue even if DB save fails, as the STK push was successful
+    } catch (err) {
+      console.error("--- STK PUSH RAW ERROR ENCOUNTERED ---");
+      if (err.response) {
+        // This logs the exact error details returned from Daraja APIs
+        console.error(
+          "Safaricom Server Response Data:",
+          JSON.stringify(err.response.data, null, 2),
+        );
+        console.error("Status Code:", err.response.status);
+      } else {
+        console.error("System Error Message:", err.message);
+      }
+      console.error("---------------------------------------");
+
+      const errorMsg =
+        err.response?.data?.errorMessage ||
+        err.response?.data?.ResponseDescription ||
+        err.message;
+
+      res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
     }
 
     // Include dbSaved flag (undefined means not attempted)
@@ -2029,10 +2115,10 @@ const setupShutdownHandlers = () => {
 // START SERVER
 // ====================
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`
  Server running on port ${PORT}
- Local: https://server-curious-song-2077.fly.dev:${PORT}
+ Local: http://localhost:${PORT}
 
  AUTHENTICATION
    App Instance ID: ${authTokenManager.getAppInstanceInfo().id}
