@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 const UtilizedPayments = () => {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ const UtilizedPayments = () => {
     total: 0,
   });
 
+  // This evaluates to true if ALL inputs are completely empty
+  const isFormEmpty = !search.trim() && !minAmount && !maxAmount;
   useEffect(() => {
     fetchPayments();
   }, [pagination.page, pagination.limit]);
@@ -36,7 +39,7 @@ const UtilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
+        `http://localhost:3500/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -122,7 +125,7 @@ const UtilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
+        `http://localhost:3500/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -162,11 +165,11 @@ const UtilizedPayments = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `utilized_payments_all_${new Date().toISOString().split("T")[0]}.csv`;
+      a.download = `Utilized Payments ${new Date().toISOString().split("T")[0]}.csv`;
       a.click();
     } catch (err) {
       console.error("Export error:", err);
-      alert("Failed to export all utilized payments");
+      alert("Failed to export utilized payments");
     }
   };
 
@@ -217,6 +220,7 @@ const UtilizedPayments = () => {
         </div>
 
         {/* Filters */}
+        {/* Filters */}
         <div
           style={{
             backgroundColor: "#f8f9fa",
@@ -230,11 +234,12 @@ const UtilizedPayments = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "px",
+              marginBottom: "0px",
             }}
           >
             <h3 style={{ margin: 0, fontWeight: "bold" }}>Filters</h3>
           </div>
+
           <form
             onSubmit={handleSearch}
             style={{
@@ -335,13 +340,25 @@ const UtilizedPayments = () => {
             >
               <button
                 type="submit"
+                /* 
+          1. Check if any state is populated. 
+          2. We cast values to strings or check values directly to ensure numbers are caught correctly.
+        */
+                disabled={!search.trim() && !minAmount && !maxAmount}
                 style={{
                   padding: "10px 30px",
-                  backgroundColor: "#6c757d",
+                  /* 3. Toggles between gray (#6c757d) and green (#28a745) matching your style code */
+                  backgroundColor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "#6c757d"
+                      : "#28a745",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: "pointer",
+                  cursor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "not-allowed"
+                      : "pointer",
                   fontSize: "15px",
                   fontWeight: "500",
                   minWidth: "120px",
@@ -353,13 +370,21 @@ const UtilizedPayments = () => {
               <button
                 type="button"
                 onClick={handleReset}
+                disabled={!search.trim() && !minAmount && !maxAmount}
                 style={{
                   padding: "10px 30px",
-                  backgroundColor: "#6c757d",
+                  /* 3. Toggles between gray (#6c757d) and green (#28a745) matching your style code */
+                  backgroundColor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "#6c757d"
+                      : "#28a745",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: "pointer",
+                  cursor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "not-allowed"
+                      : "pointer",
                   fontSize: "15px",
                   fontWeight: "500",
                   minWidth: "120px",
@@ -380,11 +405,7 @@ const UtilizedPayments = () => {
             marginBottom: "10px",
           }}
         >
-          <StatCard
-            title="Utilized Payments"
-            value={pagination.total}
-            color="#28a745"
-          />
+          <StatCard title="Total" value={pagination.total} color="#28a745" />
         </div>
 
         {error && (
@@ -400,8 +421,7 @@ const UtilizedPayments = () => {
             <strong>Note:</strong> {error}
           </div>
         )}
-
-        {/* Tabs for Status (Optional, matches AdminPayments layout) */}
+        {/* Tabs for Status */}
         <div style={{ marginBottom: "20px" }}>
           <div
             style={{
@@ -411,26 +431,21 @@ const UtilizedPayments = () => {
             }}
           >
             <button
-              onClick={() => {
-                setPagination((prev) => ({ ...prev, page: 1 }));
-                fetchPayments();
-              }}
+              disabled
               style={{
                 padding: "10px 20px",
                 backgroundColor: "transparent",
                 border: "none",
-                borderBottom: "3px solid #28a745",
-                color: "#28a745",
+                color: "#007bff",
                 fontWeight: "500",
                 cursor: "pointer",
                 fontSize: "14px",
               }}
             >
-              All Utilized ({pagination.total})
+              This Page ({payments.length})
             </button>
           </div>
         </div>
-
         {/* Payments Table */}
         <div style={{ overflowX: "auto" }}>
           {loading ? (
@@ -446,7 +461,7 @@ const UtilizedPayments = () => {
                   margin: "0 auto 20px",
                 }}
               ></div>
-              Loading utilized payments...
+              Loading payments...
             </div>
           ) : payments.length === 0 ? (
             <div
@@ -625,7 +640,7 @@ const UtilizedPayments = () => {
                     pagination.page * pagination.limit,
                     pagination.total,
                   )}{" "}
-                  of {pagination.total} utilized payments
+                  of {pagination.total}
                 </div>
 
                 <div
@@ -652,10 +667,22 @@ const UtilizedPayments = () => {
                     Previous
                   </button>
 
-                  <span style={{ padding: "10px 50px" }}>
-                    Page {pagination.page} of {"   "}
-                    {Math.ceil(pagination.total / pagination.limit)}
-                  </span>
+                  {/* Center Page Box */}
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      color: "#000000",
+                      marginTop: "16px",
+                      padding: "8px 16px",
+                      borderRadius: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {/* This forces exactly one clean string with zero trailing code spaces */}
+                    {`Page ${pagination.page} of ${Math.ceil(pagination.total / pagination.limit)}`}
+                  </div>
 
                   <button
                     onClick={() =>

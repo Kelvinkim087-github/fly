@@ -20,7 +20,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        "https://server-curious-song-2077.fly.dev/admin/users",
+        "https://vercel-five-omega-66.vercel.app/admin/users",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "https://server-curious-song-2077.fly.dev/admin/promote",
+        "https://vercel-five-omega-66.vercel.app/admin/promote",
         { targetUser: username },
         {
           headers: {
@@ -147,7 +147,7 @@ const AdminUsers = () => {
           }}
         >
           <h3 style={{ marginTop: 0, marginBottom: "15px" }}>
-            Promote User to Admin
+            Promote to Admin
           </h3>
 
           {promoteSuccess && (
@@ -160,7 +160,7 @@ const AdminUsers = () => {
                 marginBottom: "15px",
               }}
             >
-              ✅ {promoteSuccess}
+              {promoteSuccess}
             </div>
           )}
 
@@ -205,6 +205,9 @@ const AdminUsers = () => {
                     ? "not-allowed"
                     : "pointer",
                 height: "40px",
+                flexShrink: "0",
+                flexGrow: "0",
+                transform: "scale(1)",
               }}
             >
               {promoteLoading ? "Promoting..." : "Promote to Admin"}
@@ -304,20 +307,6 @@ const AdminUsers = () => {
                   <tr key={user._id} style={{ borderBottom: "1px solid #eee" }}>
                     <td style={{ padding: "12px", fontWeight: "500" }}>
                       {user.user}
-                      {user.roles?.includes("Admin") && (
-                        <span
-                          style={{
-                            fontSize: "10px",
-                            backgroundColor: "#dc3545",
-                            color: "white",
-                            padding: "2px 6px",
-                            borderRadius: "10px",
-                            marginLeft: "8px",
-                          }}
-                        >
-                          ADMIN
-                        </span>
-                      )}
                     </td>
                     <td style={{ padding: "12px" }}>
                       <div
@@ -360,12 +349,13 @@ const AdminUsers = () => {
                           onClick={() => handlePromote(user.user)}
                           disabled={promoteLoading}
                           style={{
-                            padding: "6px 12px",
+                            padding: "6px 6px",
                             backgroundColor: promoteLoading
                               ? "#6c757d"
                               : "#17a2b8",
                             color: "white",
                             border: "none",
+                            width: "150px",
                             borderRadius: "4px",
                             cursor: promoteLoading ? "not-allowed" : "pointer",
                             fontSize: "12px",

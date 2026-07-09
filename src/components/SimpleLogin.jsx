@@ -47,7 +47,7 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
 
     try {
       const response = await fetch(
-        "https://server-curious-song-2077.fly.dev/auth",
+        "https://vercel-five-omega-66.vercel.app/auth",
         {
           method: "POST",
           headers: {
@@ -329,27 +329,6 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
           >
             Create New Account
           </button>
-
-          {/* Security Notice */}
-          <div
-            style={{
-              marginTop: "30px",
-              padding: "15px",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "6px",
-              border: "1px solid #e9ecef",
-              fontSize: "13px",
-              color: "#666",
-              textAlign: "left",
-            }}
-          >
-            <strong>🔒 Security Notice:</strong>
-            <p style={{ margin: "8px 0 0 0" }}>
-              For security reasons, all user sessions are automatically
-              terminated when the server restarts. You will need to login again
-              after server maintenance or updates.
-            </p>
-          </div>
         </div>
       </div>
 

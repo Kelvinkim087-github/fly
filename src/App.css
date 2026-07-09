@@ -115,9 +115,11 @@ button {
 button {
   padding: 0.75rem;
   cursor: pointer;
+  transition: transform 0.3s ease;
 }
 button:hover {
   color: #000;
+  transform: scale(1.05);
 }
 
 .logoutButtonStyle:hover {

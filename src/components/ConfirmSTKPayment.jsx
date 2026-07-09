@@ -33,12 +33,14 @@ const ConfirmSTKPayment = () => {
   // Fetch customers from SAP Business One via backend proxy
   const fetchSAPCustomers = async () => {
     try {
-      setLoadingCustomers(true);
+      setError("");
       setSapError("");
+
+      setLoadingCustomers(true);
 
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/api/sap/business-partners`,
+        `http://localhost:3500/api/sap/business-partners`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,7 +83,7 @@ const ConfirmSTKPayment = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/api/sap/invoices`,
+        `http://localhost:3500/api/sap/invoices`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -120,7 +122,7 @@ const ConfirmSTKPayment = () => {
 
         setInvoices(formattedInvoices);
         console.log(
-          `✅ Loaded ${formattedInvoices.length} invoices for customer ${customerCode}`,
+          `Loaded ${formattedInvoices.length} invoices for customer ${customerCode}`,
         );
       } else {
         setInvoices([]);
@@ -147,7 +149,7 @@ const ConfirmSTKPayment = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/api/sap/invoices/${docEntry}`,
+        `http://localhost:3500/api/sap/invoices/${docEntry}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -211,7 +213,7 @@ const ConfirmSTKPayment = () => {
       // Otherwise fetch from API
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/admin/payments/${id}`,
+        `http://localhost:3500/admin/payments/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -294,7 +296,7 @@ const ConfirmSTKPayment = () => {
       console.log("📤 Sending confirmation to backend:", sapPaymentData);
 
       const sapResponse = await axios.post(
-        `https://server-curious-song-2077.fly.dev/api/sap/incoming-payments`,
+        `http://localhost:3500/api/sap/incoming-payments`,
         sapPaymentData,
         {
           headers: {
@@ -520,12 +522,20 @@ const ConfirmSTKPayment = () => {
                         className="p-3 border rounded d-flex align-items-center"
                         style={{ gap: "8px" }}
                       >
-                        <div className="spinner spinner-sm"></div>
+                        <div className="spinner"></div>
                         <span>Loading customers from SAP...</span>
                       </div>
                     ) : customers.length === 0 ? (
                       <div className="text-center p-3 border rounded text-muted">
                         No customers available. Please check SAP connection.
+                        <span>
+                          <button
+                            className="refresh"
+                            onClick={fetchSAPCustomers}
+                          >
+                            Refresh
+                          </button>
+                        </span>
                       </div>
                     ) : (
                       <>
@@ -558,7 +568,7 @@ const ConfirmSTKPayment = () => {
                           className="p-3 border rounded d-flex align-items-center"
                           style={{ gap: "8px" }}
                         >
-                          <div className="spinner spinner-sm"></div>
+                          <div className="spinner"></div>
                           <span>Loading invoices from SAP...</span>
                         </div>
                       ) : invoices.length === 0 ? (
@@ -770,12 +780,16 @@ const ConfirmSTKPayment = () => {
                     disabled={
                       processing || !selectedCustomer || customers.length === 0
                     }
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                     className="btn btn-success btn-lg"
                   >
                     {processing ? (
                       <>
-                        <div className="spinner spinner-sm me-2"></div>
-                        Confirming...
+                        <div className="spinner"></div>
                       </>
                     ) : (
                       <>Submit</>
@@ -960,10 +974,10 @@ const ConfirmSTKPayment = () => {
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
           }
           .btn {
-            width: 250px;
+            width: 150px;
             display: inline-flex;
             align-items: center;
-            padding: 10px 20px;
+            padding: 10px 10px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -990,8 +1004,9 @@ const ConfirmSTKPayment = () => {
             color: #212529;
           }
           .btn-lg {
-            padding: 15px 30px;
+            padding: 10px 20px;
             font-size: 16px;
+            width: 100px;
           }
           .btn-sm {
             padding: 5px 10px;
@@ -1013,6 +1028,9 @@ const ConfirmSTKPayment = () => {
             background: transparent;
             border: none;
             padding: 0;
+          }
+          .refresh {
+            width: 80px;
           }
           .mb-2 {
             margin-bottom: 0.5rem;
@@ -1077,7 +1095,7 @@ const ConfirmSTKPayment = () => {
           .alert {
             padding: 1rem;
             border-radius: 0.375rem;
-            margin-bottom: 1rem;
+            margin: 1rem 0 1rem 0;
           }
           .alert-danger {
             background-color: #f8d7da;

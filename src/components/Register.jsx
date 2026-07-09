@@ -52,7 +52,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "https://server-curious-song-2077.fly.dev/register",
+        "http://localhost:3500/register",
         {
           user: formData.user,
           pwd: formData.pwd,

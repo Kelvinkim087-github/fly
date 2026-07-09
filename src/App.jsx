@@ -69,7 +69,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        await fetch("https://server-curious-song-2077.fly.dev/logout", {
+        await fetch("https://vercel-five-omega-66.vercel.app/logout", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,23 +102,7 @@ function App() {
               width: "100%",
             }}
           >
-            <div style={navBrandStyle}>
-              M-Pesa Payment System
-              {isAuthenticated && (
-                <span
-                  style={{
-                    fontSize: "12px",
-                    backgroundColor: isAdmin ? "#dc3545" : "#28a745",
-                    color: "white",
-                    padding: "2px 8px",
-                    borderRadius: "10px",
-                    marginLeft: "10px",
-                  }}
-                >
-                  {isAdmin ? "Admin" : "User"}
-                </span>
-              )}
-            </div>
+            <div style={navBrandStyle}>M-Pesa Payment System</div>
 
             {/* Hamburger Icon */}
             <button
@@ -389,7 +373,7 @@ function Home({ isAdmin, isAuthenticated, appInstanceId }) {
           <>
             <Card
               title="Make Payment"
-              description="Complete payment form with authentication"
+              description="Send Mpesa Prompt to Customer"
               link="/payment"
               linkText="Make Payment"
               color="#ffc107"
@@ -607,11 +591,12 @@ const hamburgerLineStyle = {
 // Add responsive styles via a simple injectStyle helper or raw CSS
 const responsiveStyles = `
   .nav-links-container a {
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease; 
   }
   .nav-links-container a:hover {
     background-color: #28a745 !important;
     color: white !important;
+    transform: scale(1.05);
   }
   .hamburger-btn {
     display: none;

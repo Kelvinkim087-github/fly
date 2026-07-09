@@ -9,6 +9,7 @@ const UnutilizedPayments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
   const [pagination, setPagination] = useState({
@@ -17,6 +18,7 @@ const UnutilizedPayments = () => {
     total: 0,
   });
 
+  const isFormEmpty = !search.trim() && !minAmount && !maxAmount;
   useEffect(() => {
     fetchPayments();
   }, [pagination.page, pagination.limit]);
@@ -36,7 +38,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
+        `http://localhost:3500/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +154,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://server-curious-song-2077.fly.dev/admin/payments?${params}`,
+        `http://localhost:3500/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -192,7 +194,7 @@ const UnutilizedPayments = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `unutilized_payments_all_${new Date().toISOString().split("T")[0]}.csv`;
+      a.download = `Unutilized Payments ${new Date().toISOString().split("T")[0]}.csv`;
       a.click();
     } catch (err) {
       console.error("Export error:", err);
@@ -211,6 +213,7 @@ const UnutilizedPayments = () => {
     (p) => getPaymentStatus(p) === "Failed",
   );
 
+  const hasData = inputValue.trim().length > 0;
   // (Filtered on server via status=not:paid)
 
   return (
@@ -380,13 +383,21 @@ const UnutilizedPayments = () => {
             >
               <button
                 type="submit"
+                disabled={!search.trim() && !minAmount && !maxAmount}
                 style={{
                   padding: "10px 30px",
-                  backgroundColor: "#6c757d",
+                  /* 3. Toggles between gray (#6c757d) and green (#28a745) matching your style code */
+                  backgroundColor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "#6c757d"
+                      : "#28a745",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: "pointer",
+                  cursor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "not-allowed"
+                      : "pointer",
                   fontSize: "15px",
                   fontWeight: "500",
                   minWidth: "120px",
@@ -398,13 +409,21 @@ const UnutilizedPayments = () => {
               <button
                 type="button"
                 onClick={handleReset}
+                disabled={!search.trim() && !minAmount && !maxAmount}
                 style={{
                   padding: "10px 30px",
-                  backgroundColor: "#6c757d",
+                  /* 3. Toggles between gray (#6c757d) and green (#28a745) matching your style code */
+                  backgroundColor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "#6c757d"
+                      : "#28a745",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: "pointer",
+                  cursor:
+                    !search.trim() && !minAmount && !maxAmount
+                      ? "not-allowed"
+                      : "pointer",
                   fontSize: "15px",
                   fontWeight: "500",
                   minWidth: "120px",
@@ -425,11 +444,7 @@ const UnutilizedPayments = () => {
             marginBottom: "10px",
           }}
         >
-          <StatCard
-            title="Unutilized Payments"
-            value={payments.length}
-            color="#f7bd11ff"
-          />
+          <StatCard title="Total" value={pagination.total} color="#f7bd11ff" />
         </div>
 
         {error && (
@@ -445,7 +460,6 @@ const UnutilizedPayments = () => {
             <strong>Note:</strong> {error}
           </div>
         )}
-
         {/* Tabs for Status */}
         <div style={{ marginBottom: "20px" }}>
           <div
@@ -456,26 +470,21 @@ const UnutilizedPayments = () => {
             }}
           >
             <button
-              onClick={() => {
-                setPagination((prev) => ({ ...prev, page: 1 }));
-                fetchPayments();
-              }}
+              disabled
               style={{
                 padding: "10px 20px",
                 backgroundColor: "transparent",
                 border: "none",
-                borderBottom: "3px solid #007bff",
                 color: "#007bff",
                 fontWeight: "500",
                 cursor: "pointer",
                 fontSize: "14px",
               }}
             >
-              All Unutilized ({payments.length})
+              This Page ({payments.length})
             </button>
           </div>
         </div>
-
         {/* Payments Table */}
         <div style={{ overflowX: "auto" }}>
           {loading ? (
@@ -491,7 +500,7 @@ const UnutilizedPayments = () => {
                   margin: "0 auto 20px",
                 }}
               ></div>
-              Loading STK payments...
+              Loading payments...
             </div>
           ) : payments.length === 0 ? (
             <div
@@ -730,6 +739,7 @@ const UnutilizedPayments = () => {
               </table>
 
               {/* Pagination */}
+              {/* Pagination */}
               <div
                 style={{
                   display: "flex",
@@ -741,18 +751,25 @@ const UnutilizedPayments = () => {
                   borderRadius: "2px",
                 }}
               >
-                <div style={{ fontSize: "14px", color: "#000000ff" }}>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    marginTop: "16px",
+                    color: "#000000",
+                  }}
+                >
                   Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                   {Math.min(
                     pagination.page * pagination.limit,
                     pagination.total,
                   )}{" "}
-                  of {pagination.total} STK payments
+                  of {pagination.total}
                 </div>
 
                 <div
                   style={{ display: "flex", gap: "10px", alignItems: "center" }}
                 >
+                  {/* Previous Button */}
                   <button
                     onClick={() =>
                       setPagination((prev) => ({
@@ -774,11 +791,24 @@ const UnutilizedPayments = () => {
                     Previous
                   </button>
 
-                  <span style={{ padding: "10px 50px" }}>
-                    Page {pagination.page} of {"   "}
-                    {Math.ceil(pagination.total / pagination.limit)}
-                  </span>
+                  {/* Center Page Box */}
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      color: "#000000",
+                      marginTop: "16px",
+                      padding: "8px 16px",
+                      borderRadius: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {/* This forces exactly one clean string with zero trailing code spaces */}
+                    {`Page ${pagination.page} of ${Math.ceil(pagination.total / pagination.limit)}`}
+                  </div>
 
+                  {/* Next Button - Removed marginRight to keep gap uniform */}
                   <button
                     onClick={() =>
                       setPagination((prev) => ({
@@ -792,7 +822,6 @@ const UnutilizedPayments = () => {
                     }
                     style={{
                       padding: "8px 16px",
-                      marginRight: "16px",
                       backgroundColor:
                         pagination.page * pagination.limit >= pagination.total
                           ? "#e9ecef"
@@ -812,6 +841,7 @@ const UnutilizedPayments = () => {
                     Next
                   </button>
 
+                  {/* Select Dropdown - Removed marginTop to bring back to vertical center */}
                   <select
                     value={pagination.limit}
                     onChange={(e) =>
@@ -822,8 +852,8 @@ const UnutilizedPayments = () => {
                       }))
                     }
                     style={{
-                      marginTop: "16px",
                       padding: "8px",
+                      marginTop: "16px",
                       border: "1px solid #ddd",
                       borderRadius: "4px",
                       fontSize: "14px",
