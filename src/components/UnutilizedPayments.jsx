@@ -38,7 +38,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `http://localhost:3500/admin/payments?${params}`,
+        `https://vercel-five-omega-66.vercel.app/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -154,7 +154,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `http://localhost:3500/admin/payments?${params}`,
+        `https://vercel-five-omega-66.vercel.app/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
