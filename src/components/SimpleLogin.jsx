@@ -41,7 +41,7 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
     setError("");
 
     try {
-      const response = await fetch("http://kelvin:3500/auth", {
+      const response = await fetch("https://vercelkim.vercel.app/auth", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

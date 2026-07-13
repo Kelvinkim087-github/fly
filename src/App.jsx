@@ -69,7 +69,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        await fetch("http://kelvin:3500/logout", {
+        await fetch("https://vercelkim.vercel.app/logout", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

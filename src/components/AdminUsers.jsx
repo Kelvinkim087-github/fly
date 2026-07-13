@@ -26,11 +26,14 @@ const AdminUsers = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await axios.get("http://kelvin:3500/admin/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.get(
+        "https://vercelkim.vercel.app/admin/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       // Backend returns: { success: true, data: users }
       // axios response.data contains the JSON response
@@ -82,7 +85,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://kelvin:3500/admin/promote",
+        "https://vercelkim.vercel.app/admin/promote",
         { targetUser: username },
         {
           headers: {

@@ -38,7 +38,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `http://kelvin:3500/admin/payments?${params}`,
+        `https://vercelkim.vercel.app/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -153,7 +153,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `http://kelvin:3500/admin/payments?${params}`,
+        `https://vercelkim.vercel.app/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
