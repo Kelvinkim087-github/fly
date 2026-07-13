@@ -218,7 +218,7 @@ button:hover {
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid #ff0000;
   border-radius: 5px;
   font-size: 0.6rem;
   transition: border-color 0.3s;
@@ -226,8 +226,8 @@ button:hover {
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #f3cf00;
+  box-shadow: 0 0 0 3px rgba(231, 53, 22, 0.1);
 }
 
 .form-hint {

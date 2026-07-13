@@ -15,6 +15,10 @@ import Payment from "./models/paymentModel.js";
 
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { log } from "console";
+
+const app = express();
+const PORT = process.env.PORT || 3500;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,41 +31,44 @@ const envPaths = [
   join(process.cwd(), ".env"), // current working directory
 ];
 
-console.log("Searching for .env files...");
 envPaths.forEach((path) => {
   if (fs.existsSync(path)) {
-    console.log(`Loading .env from: ${path}`);
+    console.log(`Loaded .env`);
     dotenv.config({ path });
   }
 });
 
-dotenv.config(); // Fallback to default behavior
+dotenv.config();
 
-console.log("--- DEBUG: ENVIRONMENT VARIABLES ---");
-console.log("CWD:", process.cwd());
-console.log("__dirname:", __dirname);
-console.log(
-  "MPESA_KEY:",
-  process.env.MPESA_CONSUMER_KEY ? "Loaded" : "Missing",
-);
-console.log(
-  "MPESA_SECRET:",
-  process.env.MPESA_CONSUMER_SECRET ? "Loaded" : "Missing",
-);
-console.log("------------------------------------");
+app.use(async (req, res, next) => {
+  try {
+    await connectToMongo();
+    console.log("connected");
 
-// Initialize Express
-const app = express();
-const PORT = process.env.PORT || 3500;
+    next();
+  } catch (err) {
+    console.error("Database connection failure:", err);
+    res.status(500).json({ error: "Database connection failed" });
+  }
+});
 
-// Force MONGODB_URI to use 'mpesa' database as requested
-let MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/mpesa";
-if (MONGODB_URI.includes("react_login")) {
-  console.log("Overriding react_login with mpesa in connection string");
-  MONGODB_URI = MONGODB_URI.replace("react_login", "mpesa");
-}
+let cachedConnection = null;
 
-console.log(`Final MongoDB URI being used: ${MONGODB_URI}`);
+const connectToMongo = async () => {
+  if (cachedConnection && mongoose.connection.readyState === 1) {
+    return cachedConnection;
+    console.log(cachedConnection);
+  }
+
+  // Set explicit, short connection timeouts so it fails fast instead of hanging
+  cachedConnection = await mongoose.connect(process.env.MONGODB_URI, {
+    maxPoolSize: 10, // Prevents connection pool exhaustion
+    serverSelectionTimeoutMS: 5000, // Fails after 5s instead of buffering for 10s
+    socketTimeoutMS: 45000,
+  });
+  return cachedConnection;
+  console.log(cachedConnection);
+};
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "mock-secret-change-this-in-production";
@@ -398,61 +405,6 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Request logging middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    console.log(
-      `${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`,
-    );
-  });
-  next();
-});
-
-// Ensure this function sits OUTSIDE your routes at the top level of the file
-const connectToMongo = async () => {
-  console.log("LOG STEP 1: connectToMongo wrapper function invoked.");
-
-  if (mongoose.connection.readyState === 1) {
-    console.log("LOG STEP 2: Database already connected. Reusing connection.");
-    return;
-  }
-
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.error("CRITICAL ERROR: process.env.MONGODB_URI is undefined!");
-    throw new Error(
-      "Database URI string is missing from Environment Variables",
-    );
-  }
-
-  console.log("LOG STEP 3: Attempting raw mongoose.connect()...");
-
-  await mongoose.connect(uri, {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-    family: 4,
-  });
-
-  console.log("LOG STEP 4: Mongoose connected successfully!");
-};
-
-// 2. NEW Database Connection Middleware (Runs second, blocks until Mongo is ready)
-app.use(async (req, res, next) => {
-  try {
-    // Explicitly halt execution here until the handshake completes
-    await connectToMongo();
-    next(); // Database is ready, move on to the actual routes below
-  } catch (err) {
-    console.error("Database connection middleware failure:", err);
-    res
-      .status(500)
-      .json({ success: false, error: "Database connection failed" });
-  }
-});
-
 // ====================
 // AUTH MIDDLEWARE
 // ====================
@@ -492,23 +444,6 @@ const verifyAuth = (req, res, next) => {
     next();
   } catch (e) {
     return res.status(401).json({ message: "Invalid token" });
-  }
-};
-
-const verifyLogout = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(400).json({ message: "No token provided" });
-
-  try {
-    const decoded = jwt.decode(token);
-    if (!decoded) {
-      return res.status(400).json({ message: "Invalid token format" });
-    }
-
-    req.tokenToBlacklist = token;
-    next();
-  } catch (e) {
-    return res.status(400).json({ message: "Invalid token" });
   }
 };
 
@@ -758,27 +693,22 @@ app.post("/auth", async (req, res) => {
     });
   }
 });
+const verifyLogout = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(400).json({ message: "No token provided" });
 
-// Test endpoint to check database users
-app.get("/auth/test-users", async (req, res) => {
   try {
-    const users = await User.find({}, "user roles createdAt");
-    console.log("Current users in database:", users);
+    const decoded = jwt.decode(token);
+    if (!decoded) {
+      return res.status(400).json({ message: "Invalid token format" });
+    }
 
-    res.json({
-      success: true,
-      users: users.map((u) => ({
-        username: u.user,
-        roles: u.roles,
-        created: u.createdAt,
-      })),
-    });
+    req.tokenToBlacklist = token;
+    next();
   } catch (e) {
-    console.error("Error fetching users:", e);
-    res.status(500).json({ success: false, error: e.message });
+    return res.status(400).json({ message: "Invalid token" });
   }
-});
-
+};
 // Logout - invalidates BOTH app auth token AND SAP session
 app.post("/logout", verifyLogout, async (req, res) => {
   try {
@@ -860,18 +790,13 @@ app.post("/validate-token", (req, res) => {
 app.get("/auth/info", (req, res) => {
   res.json({
     success: true,
-    appInstanceInfo: authTokenManager.getAppInstanceInfo(),
-    sapSessionInfo: sapSessionManager.getSessionInfo(),
     cacheStats: cache.getStats(),
     note: "All tokens will be invalid when the app restarts",
   });
 });
 
-// ====================
 // SAP MANAGEMENT ROUTES
-// ====================
 
-// SAP Login endpoint with diagnostics
 app.post("/api/sap/login", verifyAuth, async (req, res) => {
   try {
     console.log("Testing SAP connectivity...");
@@ -925,29 +850,6 @@ app.post("/api/sap/login", verifyAuth, async (req, res) => {
       error: errorMessage,
       details: error.response?.data || error.message,
       code: error.code,
-    });
-  }
-});
-
-// SAP Logout endpoint
-app.post("/api/sap/logout", verifyAuth, async (req, res) => {
-  try {
-    await sapSessionManager.logoutFromSAP();
-
-    // Clear SAP cache
-    cache.flushAll();
-
-    res.json({
-      success: true,
-      message: "SAP session logged out successfully",
-      sessionInfo: sapSessionManager.getSessionInfo(),
-    });
-  } catch (error) {
-    console.error("SAP logout failed:", error.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to logout from SAP",
-      details: error.message,
     });
   }
 });
@@ -1142,6 +1044,7 @@ app.get("/api/sap/invoices", verifyAuth, ensureSAPToken, async (req, res) => {
 // Get all users
 app.get("/admin/users", verifyAdmin, async (req, res) => {
   try {
+    await connectToMongo();
     const users = await User.find({}, "-password");
     return res.json({
       success: true,
@@ -1159,6 +1062,7 @@ app.get("/admin/users", verifyAdmin, async (req, res) => {
 // Promote user
 app.post("/admin/promote", verifyAdmin, async (req, res) => {
   try {
+    await connectToMongo();
     const { targetUser } = req.body;
     if (!targetUser) {
       return res.status(400).json({
@@ -1174,7 +1078,12 @@ app.post("/admin/promote", verifyAdmin, async (req, res) => {
         message: "User not found",
       });
     }
-
+    if (user.roles.includes("Admin")) {
+      return res.status(404).json({
+        success: false,
+        message: "User already admin",
+      });
+    }
     if (!user.roles.includes("Admin")) {
       user.roles.push("Admin");
       await user.save();
@@ -1204,6 +1113,7 @@ app.post("/admin/promote", verifyAdmin, async (req, res) => {
 // List payments
 app.get("/admin/payments", verifyAdmin, async (req, res) => {
   try {
+    await connectToMongo();
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
     const limit = Math.min(
       100,
@@ -1276,6 +1186,7 @@ app.get("/admin/payments", verifyAdmin, async (req, res) => {
 // Get single payment
 app.get("/admin/payments/:id", verifyAdmin, async (req, res) => {
   try {
+    await connectToMongo();
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -1306,6 +1217,7 @@ app.get("/admin/payments/:id", verifyAdmin, async (req, res) => {
 // Update payment
 app.patch("/admin/payments/:id", verifyAdmin, async (req, res) => {
   try {
+    await connectToMongo();
     const { id } = req.params;
     const updateData = req.body;
 
@@ -1429,6 +1341,7 @@ app.post(
 
       if (paymentId) {
         try {
+          await connectToMongo();
           // Find and update the payment
           const payment = await Payment.findById(paymentId);
           if (payment) {
@@ -1928,106 +1841,11 @@ app.get("/stk/status/:checkoutRequestID", async (req, res) => {
   }
 });
 
-// ====================
-// SYSTEM STATUS ROUTES
-// ====================
-
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({
-    success: true,
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    database:
-      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    sapSession: sapSessionManager.getSessionInfo(),
-    authTokens: authTokenManager.getAppInstanceInfo(),
-    cacheStats: cache.getStats(),
-  });
-});
-
-// Clear cache endpoint (admin only)
-app.post("/admin/clear-cache", verifyAdmin, (req, res) => {
-  const { pattern } = req.body;
-  let cleared = 0;
-
-  if (pattern) {
-    const keys = cache.keys();
-    const regex = new RegExp(pattern);
-    keys.forEach((key) => {
-      if (regex.test(key)) {
-        cache.del(key);
-        cleared++;
-      }
-    });
-  } else {
-    cache.flushAll();
-    cleared = cache.getStats().keys;
-  }
-
-  res.json({
-    success: true,
-    message: `Cache cleared (${cleared} items)`,
-    cleared,
-  });
-});
-
-// ====================
-// HOME ROUTE
-// ====================
-
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "Payment API Server with SAP Integration",
     status: "active",
     timestamp: new Date().toISOString(),
-    appInstanceInfo: authTokenManager.getAppInstanceInfo(),
-    sapSessionInfo: sapSessionManager.getSessionInfo(),
-    performance: {
-      cacheItems: cache.getStats().keys,
-      database:
-        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    },
-    security: {
-      appAuth: "Tokens invalidate on app restart",
-      sapAuth: "SAP session invalidates on logout & restart",
-      cache: "SAP data cached for 5 minutes",
-    },
-    endpoints: {
-      auth: [
-        "POST /register",
-        "POST /auth",
-        "POST /logout",
-        "POST /validate-token",
-        "GET /auth/info",
-        "GET /auth/test-users",
-      ],
-      sap: [
-        "POST /api/sap/login",
-        "POST /api/sap/logout",
-        "GET /api/sap/session",
-        "GET /api/sap/business-partners",
-        "GET /api/sap/business-partners/:cardCode",
-        "GET /api/sap/invoices",
-        "POST /api/sap/incoming-payments",
-      ],
-      mpesa: ["POST /stk", "POST /callback"],
-      admin: [
-        "GET /admin/users",
-        "GET /admin/payments",
-        "GET /admin/payments/:id",
-        "PATCH /admin/payments/:id",
-        "POST /admin/payments/:id/confirm",
-        "PATCH /admin/payments/:id/mark-paid",
-        "POST /admin/promote",
-      ],
-      system: ["GET /health", "POST /admin/clear-cache"],
-    },
-    version: "3.0.0",
-    note: "Both app auth tokens and SAP sessions are invalidated on logout and app restart.",
   });
 });
 
@@ -2067,9 +1885,6 @@ const setupShutdownHandlers = () => {
 
     // Invalidate all tokens on restart
     authTokenManager.invalidateOnRestart();
-
-    // Invalidate SAP session
-    await sapSessionManager.logoutFromSAP();
 
     // Clear cache
     cache.flushAll();
@@ -2118,30 +1933,8 @@ const setupShutdownHandlers = () => {
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`
  Server running on port ${PORT}
- Local: http://localhost:${PORT}
-
- AUTHENTICATION
-   App Instance ID: ${authTokenManager.getAppInstanceInfo().id}
-   App Started: ${authTokenManager.getAppInstanceInfo().startedAt}
-   
- SAP INTEGRATION
-   SAP Session: ${sapSessionManager.getSessionInfo().isActive ? "Active" : "Inactive"}
-   SAP Instance ID: ${sapSessionManager.getSessionInfo().appInstanceId}
-   
- CACHE & PERFORMANCE
-   Cache Items: ${cache.getStats().keys}
-   SAP requests cached for 5 minutes
-   
- SECURITY FEATURES
-   • App tokens invalidate on app restart
-   • SAP sessions invalidate on logout & restart
-   • Auto-logout on session expiry
-   • Token blacklisting enabled
 	`);
-
-  // Setup shutdown handlers
-  setupShutdownHandlers();
 });
-
+connectToMongo();
 // Export app for testing
 export default app;

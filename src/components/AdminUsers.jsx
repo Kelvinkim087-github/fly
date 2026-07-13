@@ -14,19 +14,23 @@ const AdminUsers = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    if (error) {
+      const t = setTimeout(() => setError(""), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [error]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await axios.get(
-        "https://vercel-five-omega-66.vercel.app/admin/users",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await axios.get("http://kelvin:3500/admin/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       // Backend returns: { success: true, data: users }
       // axios response.data contains the JSON response
@@ -78,7 +82,7 @@ const AdminUsers = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "https://vercel-five-omega-66.vercel.app/admin/promote",
+        "http://kelvin:3500/admin/promote",
         { targetUser: username },
         {
           headers: {

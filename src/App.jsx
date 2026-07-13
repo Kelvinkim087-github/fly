@@ -69,7 +69,7 @@ function App() {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        await fetch("https://vercel-five-omega-66.vercel.app/logout", {
+        await fetch("http://kelvin:3500/logout", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -335,36 +335,18 @@ function Home({ isAdmin, isAuthenticated, appInstanceId }) {
         Welcome to M-Pesa Payment System
       </h2>
 
-      {/* Show restart message if needed */}
-      {showRestartMessage && isAuthenticated && (
-        <div
-          style={{
-            backgroundColor: "#fff3cd",
-            border: "1px solid #ffeaa7",
-            color: "#856404",
-            padding: "15px",
-            borderRadius: "5px",
-            margin: "20px auto",
-            maxWidth: "600px",
-            textAlign: "center",
-          }}
-        >
-          <strong>⚠️ Application Restarted</strong>
-          <p style={{ margin: "10px 0 0 0" }}>
-            The application was restarted. You have been logged out for security
-            reasons. Please login again.
-          </p>
-        </div>
-      )}
-
       {/* Feature Cards */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 400px))",
+          display: "flex",
+          flexWrap: "wrap",
           justifyContent: "center",
           alignItems: "center",
+          maxWidth: "400px",
           gap: "20px",
+          padding: "20px",
+
+          boxSizing: "border-box",
           marginTop: "0px",
         }}
       >
@@ -426,45 +408,6 @@ function Home({ isAdmin, isAuthenticated, appInstanceId }) {
   );
 }
 
-// Status Card Component
-function StatusCard({ title, status, description, color, link, linkText }) {
-  return (
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: "8px",
-        padding: "20px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        borderTop: `4px solid ${color}`,
-        textAlign: "left",
-      }}
-    >
-      <h3 style={{ color, marginTop: 0, fontSize: "18px" }}>{title}</h3>
-      <div style={{ fontSize: "24px", fontWeight: "bold", margin: "10px 0" }}>
-        {status}
-      </div>
-      <p style={{ color: "#666", marginBottom: "15px" }}>{description}</p>
-      {link && (
-        <Link to={link}>
-          <button
-            style={{
-              backgroundColor: color,
-              color: "white",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "14px",
-            }}
-          >
-            {linkText}
-          </button>
-        </Link>
-      )}
-    </div>
-  );
-}
-
 // Card Component
 function Card({ title, description, link, linkText, color, icon }) {
   return (
@@ -472,18 +415,23 @@ function Card({ title, description, link, linkText, color, icon }) {
       style={{
         backgroundColor: "white",
         borderRadius: "8px",
+
+        // CHANGE THIS: flex-grow is now 0, flex-shrink is 1, and basis is 250px
+        flex: "0 1 400px",
+
+        // OPTIONAL ADJUSTMENT: Set this to match your basis if you want it strictly uniform
+        maxWidth: "400px",
+
+        boxSizing: "border-box",
         padding: "25px",
         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
         borderTop: `4px solid ${color}`,
         transition: "transform 0.2s",
-        ":hover": {
-          transform: "translateY(-5px)",
-        },
       }}
     >
       <div style={{ fontSize: "40px", marginBottom: "15px" }}>{icon}</div>
       <h3 style={{ color, marginTop: 0 }}>{title}</h3>
-      <p style={{ color: "#666", marginBottom: "20px" }}>{description}</p>
+      <p style={{ color: "#666", marginBottom: "2px" }}>{description}</p>
       <Link to={link}>
         <button
           style={{
@@ -503,7 +451,6 @@ function Card({ title, description, link, linkText, color, icon }) {
     </div>
   );
 }
-
 // Styles (same as before)
 const navStyle = {
   backgroundColor: "#091446ff",
@@ -554,6 +501,11 @@ const logoutButtonStyle = {
   cursor: "pointer",
   fontSize: "14px",
   fontWeight: "500",
+  // FIXES:
+  width: "fit-content", // Shrinks the width to perfectly wrap the text
+  alignSelf: "center", // Prevents the nav bar from stretching it vertically
+  flexGrow: 0, // Stops it from expanding to fill empty space
+  flexShrink: 0,
   transition: "background-color 0.2s",
 };
 
@@ -581,6 +533,9 @@ const hamburgerStyle = {
 };
 
 const hamburgerLineStyle = {
+  display: "flex",
+  gap: "15px" /* Puts clean spacing between Home, Login, Register */,
+  alignItems: "center",
   width: "100%",
   height: "3px",
   backgroundColor: "white",
@@ -591,12 +546,12 @@ const hamburgerLineStyle = {
 // Add responsive styles via a simple injectStyle helper or raw CSS
 const responsiveStyles = `
   .nav-links-container a {
-    transition: transform 0.3s ease; 
+    transition: transform 0.3s ease-in; 
   }
   .nav-links-container a:hover {
     background-color: #28a745 !important;
     color: white !important;
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
   .hamburger-btn {
     display: none;

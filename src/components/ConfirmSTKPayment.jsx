@@ -132,7 +132,8 @@ const ConfirmSTKPayment = () => {
       console.error("❌ Error fetching invoices:", error);
       setInvoices([]);
       setSapError(
-        error.response?.data?.error || "Failed to load invoices from SAP",
+        error.response?.data?.error ||
+          "Failed to load invoices from SAP.Please Login again",
       );
     } finally {
       setLoadingInvoices(false);
@@ -774,11 +775,14 @@ const ConfirmSTKPayment = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="d-flex justify-content-between align-items-center pt-4 border-top">
+                <div className="d-flex justify-content-center align-items-center pt-4 border-top">
                   <button
                     onClick={confirmPayment}
                     disabled={
-                      processing || !selectedCustomer || customers.length === 0
+                      processing ||
+                      !selectedCustomer ||
+                      !selectedInvoice ||
+                      customers.length === 0
                     }
                     style={{
                       display: "flex",

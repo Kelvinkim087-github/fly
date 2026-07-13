@@ -52,7 +52,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "https://vercel-five-omega-66.vercel.app/register",
+        "http://kelvin:3500/register",
         {
           user: formData.user,
           pwd: formData.pwd,

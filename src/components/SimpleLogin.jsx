@@ -7,7 +7,6 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [infoMessage, setInfoMessage] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,9 +25,6 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
       setError("Your session has expired. Please login again.");
     } else if (params.get("reason") === "app_restarted") {
       setError("The application was restarted. Please login again.");
-      setInfoMessage(
-        "For security, all sessions are terminated when the app restarts.",
-      );
     } else if (params.get("restart") === "true") {
       setError("Application was restarted. Please login again.");
     }
@@ -43,20 +39,16 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setInfoMessage("");
 
     try {
-      const response = await fetch(
-        "https://vercel-five-omega-66.vercel.app/auth",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user: username, pwd: password }),
-          timeout: 10000, // 10 second timeout
+      const response = await fetch("http://kelvin:3500/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ user: username, pwd: password }),
+        timeout: 10000, // 10 second timeout
+      });
 
       const data = await response.json();
 
@@ -91,9 +83,6 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
         // Backend might not be running
         setError(
           "Cannot connect to server. Please ensure the backend is running.",
-        );
-        setInfoMessage(
-          "Server may be restarting or unavailable. Try again in a moment.",
         );
       } else {
         setError(err.message || "Login failed. Please check credentials.");
@@ -160,22 +149,6 @@ const SimpleLogin = ({ onLogin, isAuthenticated }) => {
             }}
           >
             <strong>Error:</strong> {error}
-          </div>
-        )}
-
-        {infoMessage && (
-          <div
-            style={{
-              backgroundColor: "#d1ecf1",
-              color: "#0c5460",
-              padding: "12px",
-              borderRadius: "6px",
-              marginBottom: "20px",
-              border: "1px solid #bee5eb",
-              fontSize: "14px",
-            }}
-          >
-            <strong>Info:</strong> {infoMessage}
           </div>
         )}
 

@@ -73,7 +73,7 @@ const PaymentFormFixed = () => {
       attempts++;
       try {
         const res = await fetch(
-          `https://vercel-five-omega-66.vercel.app/stk/status/${checkoutRequestId}`,
+          `http:kelvin:3500/stk/status/${checkoutRequestId}?_ts=${Date.now()}`,
         );
         console.log("Polling status response code:", res.status);
 
@@ -156,7 +156,7 @@ const PaymentFormFixed = () => {
     try {
       const requestData = { phone: phone.trim(), amount: parseFloat(amount) };
 
-      const response = await fetch("https://vercel-five-omega-66.vercel.app/stk", {
+      const response = await fetch("http://kelvin:3500/stk", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -179,7 +179,9 @@ const PaymentFormFixed = () => {
 
       if (data.success || data.ResponseCode === "0") {
         console.log("✅ Payment initiated, starting poll for callback...");
-        setSuccess(`✅ Prompt sent to ${phone}. Please enter your M-Pesa PIN.`);
+        setSuccess(
+          `Success: Prompt sent to ${phone}. Please enter your M-Pesa PIN.`,
+        );
         const checkoutRequestId = data.CheckoutRequestID;
         if (checkoutRequestId) {
           setPolling(true);
@@ -285,7 +287,11 @@ const PaymentFormFixed = () => {
           </div>
         )}
         <button
-          onClick={() => setShowSuccessModal(false)}
+          onClick={() => {
+            setShowSuccessModal(false);
+            setPhone("07"); // Resets phone to default
+            setAmount("1");
+          }}
           style={{
             backgroundColor: "#059669",
             color: "white",

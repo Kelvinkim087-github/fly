@@ -21,7 +21,7 @@ const UnutilizedPayments = () => {
   const isFormEmpty = !search.trim() && !minAmount && !maxAmount;
   useEffect(() => {
     fetchPayments();
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, search, minAmount, maxAmount]);
 
   const fetchPayments = async () => {
     try {
@@ -38,7 +38,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://vercel-five-omega-66.vercel.app/admin/payments?${params}`,
+        `http://kelvin:3500/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,11 +79,10 @@ const UnutilizedPayments = () => {
     fetchPayments();
   };
 
-  const handleReset = () => {
+  const handleReset = (e) => {
     setSearch("");
     setMinAmount("");
     setMaxAmount("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // Navigate to confirmation page
@@ -154,7 +153,7 @@ const UnutilizedPayments = () => {
       });
 
       const response = await axios.get(
-        `https://vercel-five-omega-66.vercel.app/admin/payments?${params}`,
+        `http://kelvin:3500/admin/payments?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
