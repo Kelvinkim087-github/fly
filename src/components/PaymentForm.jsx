@@ -73,7 +73,7 @@ const PaymentFormFixed = () => {
       attempts++;
       try {
         const res = await fetch(
-          `https//:vercelkim.vercel.app/stk/status/${checkoutRequestId}?_ts=${Date.now()}`,
+          `https://vercelkim.vercel.app/stk/status/${checkoutRequestId}?_ts=${Date.now()}`,
         );
         console.log("Polling status response code:", res.status);
 
@@ -156,7 +156,7 @@ const PaymentFormFixed = () => {
     try {
       const requestData = { phone: phone.trim(), amount: parseFloat(amount) };
 
-      const response = await fetch("https//:vercelkim.vercel.app/stk", {
+      const response = await fetch("https://vercelkim.vercel.app/stk", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
